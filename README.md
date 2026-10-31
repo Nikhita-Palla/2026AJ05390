@@ -41,7 +41,7 @@ Given the browsing behaviour of a visitor during a single session on an e-commer
 
 ## c. GitHub repository link
 
-`<add your GitHub repository URL here>`
+https://github.com/Nikhita-Palla/2026AJ05390
 
 ```
 project-folder/
