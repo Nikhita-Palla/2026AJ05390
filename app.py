@@ -333,8 +333,8 @@ st.session_state.setdefault("model_choice", "Decision Tree")
 
 page = st.navigation([
     st.Page(overview_page, title="Overview", icon=":material/home:", default=True),
-    st.Page(evaluate_page, title="Evaluate a model", icon=":material/analytics:"),
-    st.Page(compare_page, title="Compare all models", icon=":material/leaderboard:"),
+    st.Page(evaluate_page, title="Evaluate a model", icon=":material/analytics:", url_path="evaluate"),
+    st.Page(compare_page, title="Compare all models", icon=":material/leaderboard:", url_path="compare"),
 ])
 
 with st.sidebar:
