@@ -95,12 +95,16 @@ project-folder/
 
 ## Streamlit app features
 
-- **CSV upload** of test data, or the bundled sample `test_data.csv` (a download button is provided).
-- **Model selection dropdown** for the five saved models, with a one-line description of each.
-- **Model results** tab: a plain-English summary, the six evaluation metrics (Accuracy, AUC, Precision, Recall, F1, MCC) with explanations, a labelled **confusion matrix**, outcome counts (buyers caught/missed, false alarms) and the **classification report**.
-- **Predictions** tab: row-by-row actual vs. predicted outcome, purchase probability bar and ✅/❌ result. It can be filtered (correct, wrong, missed buyers…) and downloaded as CSV.
-- **Compare all models** tab: metric table with the best value per metric highlighted, the overall winner, a per-metric bar chart and ROC curves.
-- **Data** tab: preview of the test data and a guide to each column.
+The app has three pages in the sidebar, plus a shared **Test data** selector below them.
+
+- **CSV upload** of test data (sidebar), or the bundled sample `test_data.csv` (a download button is provided).
+- **Overview** page: what the app does, how to use it, a summary of the loaded data and a guide to each column.
+- **Evaluate a model** page:
+  - **Model selection dropdown** for the five saved models, with a one-line description of each.
+  - The six **evaluation metrics** (Accuracy, AUC, Precision, Recall, F1, MCC), with explanations.
+  - *Performance* tab: a labelled **confusion matrix**, outcome counts (buyers caught/missed, false alarms) and the **classification report**.
+  - *Predictions* tab: row-by-row actual vs. predicted outcome with the purchase probability. It can be filtered and downloaded as CSV.
+- **Compare all models** page: metric table with the best value per metric highlighted, the overall winner, a per-metric bar chart and ROC curves.
 
 The app loads the saved `.joblib` pipelines and **only predicts** on the uploaded data — no retraining. The uploaded CSV must contain all 17 feature columns and the `Revenue` target column (`TRUE/FALSE` or `1/0`).
 
