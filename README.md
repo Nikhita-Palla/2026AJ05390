@@ -1,10 +1,10 @@
 # Online Shopper Purchase Intention — ML Classification (Assignment 2)
 
-**Live app:** `<add your Streamlit Community Cloud URL here>`
+**Live app:** https://shopper-intent-ml-2026aj05390.streamlit.app/
 
 ## a. Problem statement
 
-Given the browsing behaviour of a visitor during a single session on an e-commerce website, predict whether the session will end in a **purchase** (`Revenue = 1`) or not (`Revenue = 0`). This is a **binary classification** problem. Five classifiers are trained on the same data, compared on six evaluation metrics, and served in an interactive Streamlit app that evaluates the saved models on uploaded test data without retraining.
+The goal is to predict whether a visitor's session on an online shopping website ends in a purchase (`Revenue = 1`) or not (`Revenue = 0`), based on how they browsed the site. It is a binary classification problem. I trained 5 classifiers on the same data, compared them using 6 metrics, and built a Streamlit app where the saved models can be tested on uploaded test data.
 
 ## b. Dataset description
 
@@ -33,11 +33,14 @@ Given the browsing behaviour of a visitor during a single session on an e-commer
 | VisitorType | categorical | Returning_Visitor / New_Visitor / Other |
 | Weekend | boolean | Whether the visit was on a weekend |
 
-**Preprocessing** (part of every saved pipeline, so the app takes raw columns):
-- `Weekend` and `Revenue` converted to 0/1; duplicate rows dropped.
-- Numeric features standardised with `StandardScaler`.
-- `Month` and `VisitorType` one-hot encoded (`handle_unknown="ignore"`).
-- Stratified 80/20 train/test split (`random_state=42`). The 20 % test split (2,441 rows) is saved as `test_data.csv`.
+**Preprocessing** (in `train_models.py`)
+
+1. Removed 125 duplicate rows, so 12,205 rows were left. There were no missing values.
+2. Changed `Weekend` and `Revenue` from TRUE/FALSE to 1/0.
+3. Split the data 80/20 with stratify, so both parts have about 15.6 % buyers. This gave 9,764 rows for training and 2,441 rows for testing. I saved the test part as `test_data.csv`.
+4. Scaled the 15 numeric columns with `StandardScaler`, fitted only on the training data. KNN, SVM and Logistic Regression need this because they depend on the scale of the features.
+5. One-hot encoded `Month` and `VisitorType`.
+6. Saved the preprocessing and the model together in one pipeline for each model. Because of this, the app can take the raw CSV and apply the same steps before predicting.
 
 ## c. GitHub repository link
 
@@ -84,29 +87,28 @@ project-folder/
 
 ### Observations
 
+**Ranking by MCC** (fairest single metric here, as only 16 % of sessions are purchases):
+Decision Tree (0.60) > SVM (0.55) > Logistic Regression (0.51) > KNN (0.46) > Naive Bayes (0.38)
+
 | ML Model Name | Observation about model performance |
 |---|---|
-| Logistic Regression | Strong ranking ability (AUC 0.90, second best) and high precision (0.77), but low recall (0.42): at the default 0.5 threshold it misses more than half of the buyers because of the 84/16 class imbalance. A good, interpretable baseline; lowering the threshold would trade precision for recall. |
-| Decision Tree | Best on almost every metric — accuracy 0.90, AUC 0.93, F1 0.66, MCC 0.60 — with the highest recall among the accurate models (0.61). Axis-aligned splits capture the threshold-like effect of `PageValues` (sessions with PageValue > 0 are far more likely to buy) better than the linear/distance-based models. Depth and leaf-size limits keep it from overfitting. |
-| KNN | Weakest of the "high-accuracy" models (MCC 0.46, recall 0.35). With many features of mixed importance, the distance metric is dominated by less useful features, and the majority class dominates neighbourhoods. It is also the largest saved model because it stores the whole training set. |
-| Naive Bayes | Lowest accuracy (0.71) and MCC (0.38) but the highest recall (0.81): it flags most buyers at the cost of many false positives (precision 0.33). The independence and Gaussian assumptions are violated (page counts and durations are strongly correlated and heavily skewed), which distorts its probability estimates. |
-| Support Vector Machine | Second-best accuracy (0.89), F1 (0.59) and MCC (0.55). The RBF kernel captures non-linear structure better than logistic regression, but recall (0.48) is still limited by class imbalance, and it is the slowest model to train. |
-| **Overall winner** | **Decision Tree** — the highest Accuracy, AUC, F1 and MCC. MCC and F1 are the most informative metrics for this imbalanced dataset, and the Decision Tree leads both by a clear margin. |
+| Logistic Regression | **Reliable baseline, but too cautious.**<br>• High precision (0.77) and AUC 0.90 (2nd best)<br>• Low recall (0.42): misses over half of the buyers<br>• Cause: default 0.5 threshold with only 16 % buyers |
+| Decision Tree | **Best overall.**<br>• Highest Accuracy 0.90, AUC 0.93, F1 0.66, MCC 0.60<br>• Catches 61 % of buyers<br>• Splits mainly on `PageValues` (75 % of its decisions); depth limit prevents overfitting |
+| KNN | **Weakest of the high-accuracy models.**<br>• Accuracy 0.88, but lowest recall (0.35) and MCC 0.46<br>• Neighbourhoods are dominated by non-buyers<br>• Weighs all features equally, diluting strong signals like `PageValues` |
+| Naive Bayes | **Catches buyers, but too many false alarms.**<br>• Highest recall (0.81)<br>• Lowest precision (0.33), accuracy (0.71) and MCC (0.38)<br>• Independence and normality assumptions break: features are correlated and skewed |
+| Support Vector Machine | **Strong runner-up.**<br>• 2nd-best Accuracy 0.89, F1 0.59, MCC 0.55<br>• RBF kernel captures non-linear patterns<br>• Recall (0.48) held back by class imbalance; slowest to train |
+| **Overall winner** | **Decision Tree.**<br>• Leads on Accuracy, AUC, F1 and MCC<br>• F1 and MCC matter most with imbalanced classes; MCC 0.60 vs 0.55 for SVM |
 
 ## Streamlit app features
 
-The app has three pages in the sidebar, plus a shared **Test data** selector below them.
+The app has 3 pages in the sidebar. Below them there is an option to choose the test data.
 
-- **CSV upload** of test data (sidebar), or the bundled sample `test_data.csv` (a download button is provided).
-- **Overview** page: what the app does, how to use it, a summary of the loaded data and a guide to each column.
-- **Evaluate a model** page:
-  - **Model selection dropdown** for the five saved models, with a one-line description of each.
-  - The six **evaluation metrics** (Accuracy, AUC, Precision, Recall, F1, MCC), with explanations.
-  - *Performance* tab: a labelled **confusion matrix**, outcome counts (buyers caught/missed, false alarms) and the **classification report**.
-  - *Predictions* tab: row-by-row actual vs. predicted outcome with the purchase probability. It can be filtered and downloaded as CSV.
-- **Compare all models** page: metric table with the best value per metric highlighted, the overall winner, a per-metric bar chart and ROC curves.
+- Test data: upload a CSV, or use the sample `test_data.csv` (it can also be downloaded from the app).
+- Overview: short description of the app and the dataset, and a summary of the loaded data.
+- Evaluate a model: model dropdown, the 6 metrics, confusion matrix, classification report and a table of predictions for each row.
+- Compare all models: metrics of all 5 models in one table, the best model, a bar chart and ROC curves.
 
-The app loads the saved `.joblib` pipelines and **only predicts** on the uploaded data — no retraining. The uploaded CSV must contain all 17 feature columns and the `Revenue` target column (`TRUE/FALSE` or `1/0`).
+The app does not train anything. It loads the saved `.joblib` models and only predicts on the uploaded data. The CSV must have all 17 feature columns and the `Revenue` column.
 
 ## How to run locally
 
